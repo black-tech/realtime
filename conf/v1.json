@@ -1,0 +1,26 @@
+{
+	"name":"realtimeCai",
+	"mongo":{
+		"initial":{
+			"host":"127.0.0.1",
+			"port":27017,
+			"database":"initial"
+		},
+		"analysis":{
+			"host":"127.0.0.1",
+			"port":27017,
+			"database":"analysis"
+		},
+		"tmp":{
+			"host":"127.0.0.1",
+			"port":27017,
+			"database":"tmp"
+		}
+	},
+	"redis":{
+		"default":{
+			"host":"127.0.0.1",
+			"port":6379
+		}
+	}
+}
