@@ -3,6 +3,7 @@ package collect
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -35,17 +36,45 @@ type SpiderData struct {
 	Timestamp int64  `json:"timestamp"`
 }
 
-func GetData(date time.Time) *SpiderData {
+func (s *SpiderData) SaveFile(f *os.File) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("err in save, ", r)
+			err = r.(error)
+		}
+	}()
+	if s == nil {
+
+	}
+	if s.Code == 0 {
+		if set := s.Data.Data; len(set) > 0 {
+			for i := len(set) - 1; i >= 0; i-- {
+				cell := set[i]
+				if balls := cell.Result.Result[0].Data; len(balls) == 5 {
+					sData := []string{cell.Phase, cell.TimeDraw, strings.Join(balls, ",")}
+					str := strings.Join(sData, ",")
+					f.WriteString(str + "\n")
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func GetData(date time.Time) (*SpiderData, error) {
 	req := NewRequest(date)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
-		return nil
+		return nil, err
 	}
+	defer func() {
+		resp.Body.Close()
+	}()
 	ret := new(SpiderData)
-	json.NewDecoder(resp.Body).Decode(ret)
-	return ret
+	err = json.NewDecoder(resp.Body).Decode(ret)
+	return ret, err
 }
 
 func NewRequest(t time.Time) *http.Request {
