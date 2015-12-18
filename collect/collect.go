@@ -67,40 +67,37 @@ func checkExistingData(path string, force bool) error {
 	return nil
 }
 
-func downloadAll() {
-	f, err := os.OpenFile(SOURCE_FILE, os.O_APPEND|os.O_RDWR, 0644)
+func pullAll() {
+	f, err := os.OpenFile(SOURCE_FILE, os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)
 	}
-	logf, err := os.OpenFile(LOG_FILE, os.O_CREATE|os.O_RDWR, 0644)
+	f.Close()
+
+	for t := START_TIME; t.Before(time.Now()); t = t.Add(time.Hour * 24) {
+		pullOndDay(t)
+	}
+}
+
+func pullOndDay(t time.Time) {
+	f, err := os.OpenFile(SOURCE_FILE, os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
 		panic(err)
 	}
 	defer func() {
 		f.Close()
-		logf.Close()
 	}()
 
-	for t := START_TIME; t.Before(time.Now()); t = t.Add(time.Hour * 24) {
-		times := 0
-	loop:
-		ret, err := GetData(t)
+	ret, err := GetData(t)
+	if err != nil {
+		fmt.Println("err: ", err)
+		fmt.Printf("%4d-%02d-%02d failed...\n", t.Year(), t.Month(), t.Day())
+	} else {
+		err := ret.SaveFile(f, -1)
 		if err != nil {
-			if times >= 3 {
-				fmt.Println("err: ", err)
-				fmt.Printf("%4d-%02d-%02d failed...\n", t.Year(), t.Month(), t.Day())
-				logf.WriteString(fmt.Sprintf("%4d-%02d-%02d\n", t.Year(), t.Month(), t.Day()))
-			}
-			time.Sleep(time.Second)
-			times++
-			goto loop
+			fmt.Println("err: ", err)
 		} else {
-			err := ret.SaveFile(f)
-			if err != nil {
-				fmt.Println("err: ", err)
-			} else {
-				fmt.Printf("%4d-%02d-%02d over...\n", t.Year(), t.Month(), t.Day())
-			}
+			fmt.Printf("%4d-%02d-%02d over...\n", t.Year(), t.Month(), t.Day())
 		}
 	}
 }
@@ -108,7 +105,7 @@ func downloadAll() {
 func GetLastLine() (*Ball, error) {
 	f, err := os.Open(SOURCE_FILE)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	defer f.Close()
 
@@ -120,4 +117,44 @@ func GetLastLine() (*Ball, error) {
 		return nil, err
 	}
 	return NewBallByBytes(buf)
+}
+
+func UpdateData() error {
+	b, err := GetLastLine()
+	if err == os.ErrNotExist {
+		pullAll()
+		return nil
+	} else if err != nil {
+		return err
+	}
+
+	f, err := os.OpenFile(SOURCE_FILE, os.O_APPEND|os.O_RDWR, 0644)
+	if err != nil {
+		return (err)
+	}
+	defer func() {
+		f.Close()
+	}()
+
+	if latestID := b.ID % 1000; latestID < 120 {
+		t := b.Time
+		ret, err := GetData(t)
+		if err != nil {
+			fmt.Println("err: ", err)
+			fmt.Printf("%4d-%02d-%02d failed...\n", t.Year(), t.Month(), t.Day())
+		} else {
+			err := ret.SaveFile(f, latestID)
+			if err != nil {
+				fmt.Println("err: ", err)
+			} else {
+				fmt.Printf("%4d-%02d-%02d over...\n", t.Year(), t.Month(), t.Day())
+			}
+		}
+	}
+
+	start := b.Time.Add(time.Hour * 24)
+	for t := start; t.Before(time.Now()); t = t.Add(time.Hour * 24) {
+		pullOndDay(t)
+	}
+	return nil
 }

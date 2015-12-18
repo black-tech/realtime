@@ -25,15 +25,18 @@ func TestSaveToFiel(t *testing.T) {
 		f.Close()
 	}()
 	ret, _ := GetData(time.Now())
-	err = ret.SaveFile(f)
+	err = ret.SaveFile(f, -1)
 	if err != nil {
 		t.Error(err)
 	}
 
 	ret, _ = GetData(time.Now().AddDate(0, 0, -1))
-	err = ret.SaveFile(f)
+	err = ret.SaveFile(f, -1)
 	if err != nil {
 		t.Error(err)
 	}
+}
 
+func TestUpdateData(t *testing.T) {
+	UpdateData()
 }

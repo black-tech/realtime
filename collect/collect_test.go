@@ -7,7 +7,7 @@ import (
 
 func TestDownloadAll(t *testing.T) {
 	return
-	downloadAll()
+	pullAll()
 }
 
 func TestGetLatestLine(t *testing.T) {

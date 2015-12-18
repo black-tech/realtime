@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,7 +37,7 @@ type SpiderData struct {
 	Timestamp int64  `json:"timestamp"`
 }
 
-func (s *SpiderData) SaveFile(f *os.File) (err error) {
+func (s *SpiderData) SaveFile(f *os.File, minPhase int) (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("err in save, ", r)
@@ -50,6 +51,13 @@ func (s *SpiderData) SaveFile(f *os.File) (err error) {
 		if set := s.Data.Data; len(set) > 0 {
 			for i := len(set) - 1; i >= 0; i-- {
 				cell := set[i]
+				phase, err := strconv.Atoi(cell.Phase)
+				if err != nil {
+					return err
+				}
+				if phase%1000 <= minPhase {
+					continue
+				}
 				if balls := cell.Result.Result[0].Data; len(balls) == 5 {
 					sData := []string{cell.Phase, cell.TimeDraw, strings.Join(balls, ",")}
 					str := strings.Join(sData, ",")
@@ -62,11 +70,18 @@ func (s *SpiderData) SaveFile(f *os.File) (err error) {
 }
 
 func GetData(date time.Time) (*SpiderData, error) {
+	times := 0
+loop:
+	times++
 	req := NewRequest(date)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println(err)
+		if times < 3 {
+			time.Sleep(time.Second)
+			goto loop
+		}
 		return nil, err
 	}
 	defer func() {
@@ -74,6 +89,13 @@ func GetData(date time.Time) (*SpiderData, error) {
 	}()
 	ret := new(SpiderData)
 	err = json.NewDecoder(resp.Body).Decode(ret)
+	if err != nil {
+		fmt.Println(err)
+		if times < 3 {
+			time.Sleep(time.Second)
+			goto loop
+		}
+	}
 	return ret, err
 }
 
