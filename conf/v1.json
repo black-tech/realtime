@@ -17,6 +17,15 @@
 			"database":"tmp"
 		}
 	},
+	"mysql":{
+		"db_realtime":{
+			"host":"192.168.2.230",
+			"port":3308,
+			"username":"ckeyer",
+			"password":"wangcj",
+			"database":"db_realtime"
+		}
+	},
 	"redis":{
 		"default":{
 			"host":"127.0.0.1",
