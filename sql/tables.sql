@@ -1,0 +1,25 @@
+drop table if exists t;
+create table t(
+	id int auto_increment not null,
+	date MEDIUMINT(3) not null,
+	serial_number TINYINT(1) not null,
+	c0 TINYINT(1) not null,
+	c1 TINYINT(1) not null,
+	c2 TINYINT(1) not null,
+	c3 TINYINT(1) not null,
+	c4 TINYINT(1) not null,
+	IS_BIG_0 TINYINT(1) as (c0 in(0,1,2,3,4)),
+	IS_BIG_1 TINYINT(1) as (c1 in(0,1,2,3,4)),
+	IS_BIG_2 TINYINT(1) as (c2 in(0,1,2,3,4)),
+	IS_BIG_3 TINYINT(1) as (c3 in(0,1,2,3,4)),
+	IS_BIG_4 TINYINT(1) as (c4 in(0,1,2,3,4)),
+	IS_EVEN_0 TINYINT(1) as (c0%2=0),
+	IS_EVEN_1 TINYINT(1) as (c1%2=0),
+	IS_EVEN_2 TINYINT(1) as (c2%2=0),
+	IS_EVEN_3 TINYINT(1) as (c3%2=0),
+	IS_EVEN_4 TINYINT(1) as (c4%2=0),
+	primary key(id),
+	key(date,serial_number),
+	key(date),
+	key(serial_number)
+);
